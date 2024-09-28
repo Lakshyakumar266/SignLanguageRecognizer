@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">ArduinoBTExample-v3</string>
+    <string name="linked_bluetooth_devices">Linked Bluetooth devices:</string>
+    <string name="your_sign_here">Your Sign Here...</string>
+    <string name="search_linked_bt_devices">Search linked BT devices</string>
+    <string name="connect_to_hc_05">Connect to HC-05</string>
+    <string name="clean">Clean</string>
+    <string name="customize">Customize</string>
+</resources>
