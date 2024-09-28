@@ -7,6 +7,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class CustomizeActivity extends AppCompatActivity {
@@ -40,14 +42,19 @@ public class CustomizeActivity extends AppCompatActivity {
 
                 if (arduinoString.isEmpty() || customResponse.isEmpty()) {
                     Log.e(TAG, "Arduino string or custom response cannot be empty.");
+                    Toast.makeText(CustomizeActivity.this, "Both fields are required!", Toast.LENGTH_SHORT).show(); // Provide feedback
                     return; // prevent saving empty inputs
                 }
 
+                // Save the custom response
                 customResponseManager.saveCustomResponse(arduinoString, customResponse);
-                Log.d(TAG, "Saved custom response for Arduino string: " + arduinoString);
+                Log.d(TAG, "Saved custom response for Arduino string: " + arduinoString + " with custom response: " + customResponse);
 
+                // Notify user of success
+                Toast.makeText(CustomizeActivity.this, "Custom response saved successfully!", Toast.LENGTH_SHORT).show();
                 finish(); // Go back to MainActivity
             }
         });
+
     }
 }

@@ -1,5 +1,7 @@
 package com.sarmale.arduinobtexample_v3;
 
+import static android.util.Log.println;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -8,6 +10,7 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,6 +36,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.sarmale.arduinobtexample_v3.ConnectedThread;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -58,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Log.d(TAG, getSharedPreferences("CustomResponses", MODE_PRIVATE).getAll().toString());
         // Instances of BT Manager and BT Adapter needed to work with BT in Android.
         BluetoothManager bluetoothManager = getSystemService(BluetoothManager.class);
         BluetoothAdapter bluetoothAdapter = bluetoothManager.getAdapter();
@@ -85,36 +94,51 @@ public class MainActivity extends AppCompatActivity {
             public void handleMessage(Message msg) {
                 switch (msg.what) {
                     case ERROR_READ:
+                        Log.d(TAG, getSharedPreferences("CustomResponses", MODE_PRIVATE).getAll().toString());
                         String arduinoMsg = msg.obj.toString(); // Read message from Arduino
                         if (arduinoMsg != null) {
                             Log.e(TAG, "Reading from Arduino: " + arduinoMsg);
                         }
 
-                        // Retrieve the custom response if available
-                        String customResponse = getSharedPreferences("CustomResponses", MODE_PRIVATE)
-                                .getString(arduinoMsg, null);
+                        // Retrieve the JSON string from SharedPreferences
+                        SharedPreferences sharedPreferences = getSharedPreferences("CustomResponses", MODE_PRIVATE);
+                        String jsonString = sharedPreferences.getString("responses", "{}"); // Default to an empty JSON object
 
-                        // Log the custom response being retrieved
-                        if (customResponse != null) {
+                        // Parse the JSON and retrieve the custom response
+                        try {
+                            JSONObject jsonObject = new JSONObject(jsonString);
+                            // Get the response based on the Arduino message
+                            String customResponse = jsonObject.optString(arduinoMsg, null);
                             Log.d(TAG, "Custom response retrieved for '" + arduinoMsg + "': " + customResponse);
-                        } else {
-                            Log.d(TAG, "No custom response found for '" + arduinoMsg + "'. Using default.");
-                        }
 
-                        // Update UI and text-to-speech based on response availability
-                        if (customResponse != null) {
-                            // Use the custom response if it exists
-                            btReadings.setText(customResponse);
-                            textToSpeech.speak(customResponse, TextToSpeech.QUEUE_FLUSH, null);
-                        } else {
-                            // Use the default Arduino message
-                            btReadings.setText(arduinoMsg);
-                            textToSpeech.speak(arduinoMsg, TextToSpeech.QUEUE_FLUSH, null);
+                            // Log the custom response being retrieved
+                            if (customResponse != null) {
+                                Log.d(TAG, "Custom response retrieved for '" + arduinoMsg + "': " + customResponse);
+                            } else {
+                                Log.d(TAG, "No custom response found for '" + arduinoMsg + "'. Using default.");
+                            }
+
+                            // Update UI and text-to-speech based on response availability
+                            if (customResponse != null) {
+                                // Use the custom response if it exists
+                                btReadings.setText(customResponse);
+                                textToSpeech.speak(customResponse, TextToSpeech.QUEUE_FLUSH, null);
+                            } else {
+                                // Use the default Arduino message
+                                btReadings.setText(arduinoMsg);
+                                textToSpeech.speak(arduinoMsg, TextToSpeech.QUEUE_FLUSH, null);
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            Log.e(TAG, "Failed to parse JSON: " + e.getMessage());
                         }
                         break;
                 }
             }
         };
+
+
+
 
 
 //        handler = new Handler(Looper.getMainLooper()) {
